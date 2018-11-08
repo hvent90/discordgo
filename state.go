@@ -13,9 +13,12 @@
 package discordgo
 
 import (
+	"context"
 	"errors"
 	"sort"
 	"sync"
+
+	"go.opencensus.io/stats"
 )
 
 // ErrNilState is returned when the state is nil.
@@ -792,7 +795,7 @@ func (s *State) onReady(se *Session, r *Ready) (err error) {
 }
 
 // OnInterface handles all events related to states.
-func (s *State) OnInterface(se *Session, i interface{}) (err error) {
+func (s *State) OnInterface(ctx context.Context, se *Session, i interface{}) (err error) {
 	if s == nil {
 		return ErrNilState
 	}
@@ -808,12 +811,16 @@ func (s *State) OnInterface(se *Session, i interface{}) (err error) {
 
 	switch t := i.(type) {
 	case *GuildCreate:
+		stats.Record(ctx, mGuildCreate.M(1))
 		err = s.GuildAdd(t.Guild)
 	case *GuildUpdate:
+		stats.Record(ctx, mGuildUpdate.M(1))
 		err = s.GuildAdd(t.Guild)
 	case *GuildDelete:
+		stats.Record(ctx, mGuildDelete.M(1))
 		err = s.GuildRemove(t.Guild)
 	case *GuildMemberAdd:
+		stats.Record(ctx, mGuildMemberAdd.M(1))
 		// Updates the MemberCount of the guild.
 		guild, err := s.Guild(t.Member.GuildID)
 		if err != nil {
@@ -826,10 +833,12 @@ func (s *State) OnInterface(se *Session, i interface{}) (err error) {
 			err = s.MemberAdd(t.Member)
 		}
 	case *GuildMemberUpdate:
+		stats.Record(ctx, mGuildMemberUpdate.M(1))
 		if s.TrackMembers {
 			err = s.MemberAdd(t.Member)
 		}
 	case *GuildMemberRemove:
+		stats.Record(ctx, mGuildMemberRemove.M(1))
 		// Updates the MemberCount of the guild.
 		guild, err := s.Guild(t.Member.GuildID)
 		if err != nil {
@@ -842,6 +851,7 @@ func (s *State) OnInterface(se *Session, i interface{}) (err error) {
 			err = s.MemberRemove(t.Member)
 		}
 	case *GuildMembersChunk:
+		stats.Record(ctx, mGuildMembersChunk.M(1))
 		if s.TrackMembers {
 			for i := range t.Members {
 				t.Members[i].GuildID = t.GuildID
@@ -849,56 +859,69 @@ func (s *State) OnInterface(se *Session, i interface{}) (err error) {
 			}
 		}
 	case *GuildRoleCreate:
+		stats.Record(ctx, mGuildRoleCreate.M(1))
 		if s.TrackRoles {
 			err = s.RoleAdd(t.GuildID, t.Role)
 		}
 	case *GuildRoleUpdate:
+		stats.Record(ctx, mGuildRoleUpdate.M(1))
 		if s.TrackRoles {
 			err = s.RoleAdd(t.GuildID, t.Role)
 		}
 	case *GuildRoleDelete:
+		stats.Record(ctx, mGuildRoleDelete.M(1))
 		if s.TrackRoles {
 			err = s.RoleRemove(t.GuildID, t.RoleID)
 		}
 	case *GuildEmojisUpdate:
+		stats.Record(ctx, mGuildEmojisUpdate.M(1))
 		if s.TrackEmojis {
 			err = s.EmojisAdd(t.GuildID, t.Emojis)
 		}
 	case *ChannelCreate:
+		stats.Record(ctx, mChannelCreate.M(1))
 		if s.TrackChannels {
 			err = s.ChannelAdd(t.Channel)
 		}
 	case *ChannelUpdate:
+		stats.Record(ctx, mChannelUpdate.M(1))
 		if s.TrackChannels {
 			err = s.ChannelAdd(t.Channel)
 		}
 	case *ChannelDelete:
+		stats.Record(ctx, mChannelDelete.M(1))
 		if s.TrackChannels {
 			err = s.ChannelRemove(t.Channel)
 		}
 	case *MessageCreate:
+		stats.Record(ctx, mMessageCreate.M(1))
 		if s.MaxMessageCount != 0 {
 			err = s.MessageAdd(t.Message)
 		}
 	case *MessageUpdate:
+		stats.Record(ctx, mMessageUpdate.M(1))
 		if s.MaxMessageCount != 0 {
 			err = s.MessageAdd(t.Message)
 		}
 	case *MessageDelete:
+		stats.Record(ctx, mMessageDelete.M(1))
 		if s.MaxMessageCount != 0 {
 			err = s.MessageRemove(t.Message)
 		}
 	case *MessageDeleteBulk:
+		stats.Record(ctx, mMessageDeleteBulk.M(1))
 		if s.MaxMessageCount != 0 {
 			for _, mID := range t.Messages {
 				s.messageRemoveByID(t.ChannelID, mID)
 			}
 		}
 	case *VoiceStateUpdate:
+		stats.Record(ctx, mVoiceStateUpdate.M(1))
 		if s.TrackVoice {
 			err = s.voiceStateUpdate(t)
 		}
 	case *PresenceUpdate:
+		stats.Record(ctx, mPresenceUpdate.M(1))
 		if s.TrackPresences {
 			s.PresenceAdd(t.GuildID, &t.Presence)
 		}

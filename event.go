@@ -196,12 +196,16 @@ func (s *Session) handleEvent(t string, i interface{}) {
 	s.handlersMu.RLock()
 	defer s.handlersMu.RUnlock()
 
-	// All events are dispatched internally first.
-	s.onInterface(i)
+	ctx := context.Background()
+	if t != "_event_" {
+		// Create an OpenCensus Trace
+		c, span := trace.StartSpan(context.Background(), t)
+		defer span.End()
+		ctx = c
+	}
 
-	// Create an OpenCensus Trace
-	ctx, span := trace.StartSpan(context.Background(), t)
-	defer span.End()
+	// All events are dispatched internally first.
+	s.onInterface(ctx, i)
 
 	// Then they are dispatched to anyone handling interface{} events.
 	s.handle(ctx, interfaceEventType, i)
@@ -227,7 +231,7 @@ func setGuildIds(g *Guild) {
 }
 
 // onInterface handles all internal events and routes them to the appropriate internal handler.
-func (s *Session) onInterface(i interface{}) {
+func (s *Session) onInterface(ctx context.Context, i interface{}) {
 	switch t := i.(type) {
 	case *Ready:
 		for _, g := range t.Guilds {
@@ -243,7 +247,7 @@ func (s *Session) onInterface(i interface{}) {
 	case *VoiceStateUpdate:
 		go s.onVoiceStateUpdate(t)
 	}
-	err := s.State.OnInterface(s, i)
+	err := s.State.OnInterface(ctx, s, i)
 	if err != nil {
 		s.log(LogDebug, "error dispatching internal event, %s", err)
 	}
