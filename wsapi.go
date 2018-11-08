@@ -13,6 +13,7 @@ package discordgo
 import (
 	"bytes"
 	"compress/zlib"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -65,7 +66,7 @@ func (s *Session) Open() error {
 
 	// Get the gateway to use for the Websocket connection
 	if s.gateway == "" {
-		s.gateway, err = s.Gateway()
+		s.gateway, err = s.Gateway(context.Background())
 		if err != nil {
 			return err
 		}

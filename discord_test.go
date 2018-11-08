@@ -1,6 +1,7 @@
 package discordgo
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime"
@@ -58,7 +59,7 @@ func TestInvalidToken(t *testing.T) {
 	}
 
 	// New with just a token does not do any communication, so attempt an api call.
-	_, err = d.UserSettings()
+	_, err = d.UserSettings(context.Background())
 	if err == nil {
 		t.Errorf("New(InvalidToken), d.UserSettings returned nil error.")
 	}

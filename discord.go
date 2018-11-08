@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"go.opencensus.io/plugin/ochttp"
 )
 
 // VERSION of DiscordGo, follows Semantic Versioning. (http://semver.org/)
@@ -57,9 +59,12 @@ func New(args ...interface{}) (s *Session, err error) {
 		ShardID:                0,
 		ShardCount:             1,
 		MaxRestRetries:         3,
-		Client:                 &http.Client{Timeout: (20 * time.Second)},
-		sequence:               new(int64),
-		LastHeartbeatAck:       time.Now().UTC(),
+		Client: &http.Client{
+			Transport: &ochttp.Transport{},
+			Timeout:   (20 * time.Second),
+		},
+		sequence:         new(int64),
+		LastHeartbeatAck: time.Now().UTC(),
 	}
 
 	// If no arguments are passed return the empty Session interface.

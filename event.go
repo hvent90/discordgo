@@ -1,6 +1,10 @@
 package discordgo
 
-import "context"
+import (
+	"context"
+
+	"go.opencensus.io/trace"
+)
 
 // EventHandler is an interface for Discord events.
 type EventHandler interface {
@@ -195,11 +199,15 @@ func (s *Session) handleEvent(t string, i interface{}) {
 	// All events are dispatched internally first.
 	s.onInterface(i)
 
+	// Create an OpenCensus Trace
+	ctx, span := trace.StartSpan(context.Background(), t)
+	defer span.End()
+
 	// Then they are dispatched to anyone handling interface{} events.
-	s.handle(context.Background(), interfaceEventType, i)
+	s.handle(ctx, interfaceEventType, i)
 
 	// Finally they are dispatched to any typed handlers.
-	s.handle(context.Background(), t, i)
+	s.handle(ctx, t, i)
 }
 
 // setGuildIds will set the GuildID on all the members of a guild.

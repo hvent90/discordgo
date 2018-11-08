@@ -9,6 +9,8 @@
 
 package discordgo
 
+import "context"
+
 // ------------------------------------------------------------------------------------------------
 // Code specific to Discord OAuth2 Applications
 // ------------------------------------------------------------------------------------------------
@@ -33,7 +35,7 @@ type Application struct {
 //   appID : The ID of an Application
 func (s *Session) Application(appID string) (st *Application, err error) {
 
-	body, err := s.RequestWithBucketID("GET", EndpointApplication(appID), nil, EndpointApplication(""))
+	body, err := s.RequestWithBucketID(context.Background(), "GET", EndpointApplication(appID), nil, EndpointApplication(""))
 	if err != nil {
 		return
 	}
@@ -45,7 +47,7 @@ func (s *Session) Application(appID string) (st *Application, err error) {
 // Applications returns all applications for the authenticated user
 func (s *Session) Applications() (st []*Application, err error) {
 
-	body, err := s.RequestWithBucketID("GET", EndpointApplications, nil, EndpointApplications)
+	body, err := s.RequestWithBucketID(context.Background(), "GET", EndpointApplications, nil, EndpointApplications)
 	if err != nil {
 		return
 	}
@@ -65,7 +67,7 @@ func (s *Session) ApplicationCreate(ap *Application) (st *Application, err error
 		RedirectURIs *[]string `json:"redirect_uris,omitempty"`
 	}{ap.Name, ap.Description, ap.RedirectURIs}
 
-	body, err := s.RequestWithBucketID("POST", EndpointApplications, data, EndpointApplications)
+	body, err := s.RequestWithBucketID(context.Background(), "POST", EndpointApplications, data, EndpointApplications)
 	if err != nil {
 		return
 	}
@@ -84,7 +86,7 @@ func (s *Session) ApplicationUpdate(appID string, ap *Application) (st *Applicat
 		RedirectURIs *[]string `json:"redirect_uris,omitempty"`
 	}{ap.Name, ap.Description, ap.RedirectURIs}
 
-	body, err := s.RequestWithBucketID("PUT", EndpointApplication(appID), data, EndpointApplication(""))
+	body, err := s.RequestWithBucketID(context.Background(), "PUT", EndpointApplication(appID), data, EndpointApplication(""))
 	if err != nil {
 		return
 	}
@@ -97,7 +99,7 @@ func (s *Session) ApplicationUpdate(appID string, ap *Application) (st *Applicat
 //   appID : The ID of an Application
 func (s *Session) ApplicationDelete(appID string) (err error) {
 
-	_, err = s.RequestWithBucketID("DELETE", EndpointApplication(appID), nil, EndpointApplication(""))
+	_, err = s.RequestWithBucketID(context.Background(), "DELETE", EndpointApplication(appID), nil, EndpointApplication(""))
 	if err != nil {
 		return
 	}
@@ -116,7 +118,7 @@ func (s *Session) ApplicationDelete(appID string) (err error) {
 // NOTE: func name may change, if I can think up something better.
 func (s *Session) ApplicationBotCreate(appID string) (st *User, err error) {
 
-	body, err := s.RequestWithBucketID("POST", EndpointApplicationsBot(appID), nil, EndpointApplicationsBot(""))
+	body, err := s.RequestWithBucketID(context.Background(), "POST", EndpointApplicationsBot(appID), nil, EndpointApplicationsBot(""))
 	if err != nil {
 		return
 	}
